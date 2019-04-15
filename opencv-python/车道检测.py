@@ -31,7 +31,7 @@ canny_hth = 150
 rho = 1
 theta = np.pi / 180
 threshold = 15
-min_line_len = 40
+min_line_len = 20
 max_line_gap = 20
 
 # 定义相应的函数
@@ -47,7 +47,8 @@ def hough_lines(img, rho, theta, threshold, min_line_len, max_line_gap):
     lines = cv2.HoughLinesP(img, rho, theta, threshold, minLineLength=min_line_len, maxLineGap=max_line_gap)
     # 新建一副空白画布
     drawing = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
-    # draw_lines(drawing, lines)     # 画出直线检测结果
+    draw_lines(drawing, lines)     # 画出直线检测结果
+    print(len(lines))
     return drawing, lines
 
 def draw_lines(img, lines, color=[0, 0, 255], thickness=1):
@@ -85,8 +86,8 @@ def draw_lanes(img, lines, color=[255, 0, 0], thickness=8):
     left_points = left_points + [(x2, y2) for line in left_lines for x1, y1, x2, y2 in line]
     right_points = [(x1, y1) for line in right_lines for x1, y1, x2, y2 in line]
     right_points = right_points + [(x2, y2) for line in right_lines for x1, y1, x2, y2 in line]
-    left_results = least_squares_fit(left_points, 325, img.shape[0])
-    right_results = least_squares_fit(right_points, 325, img.shape[0])
+    left_results = least_squares_fit(left_points, 139, img.shape[0])
+    right_results = least_squares_fit(right_points, 139, img.shape[0])
     # 注意这里点的顺序
     vtxs = np.array([[left_results[1], left_results[0], right_results[0], right_results[1]]])
     # d. 填充车道区域
@@ -104,7 +105,7 @@ def clean_lines(lines, threshold):
         diff = [abs(s - mean) for s in slope]
         idx = np.argmax(diff)
         if diff[idx] > threshold:
-            slope.pop(idx)
+            slope.pop(idx)  # pop弹出
             lines.pop(idx)
         else:
             break
@@ -146,7 +147,8 @@ def process_an_image(img):
     draw_lanes(drawing, lines)
 
     # 5. 最终将结果合在原图上
-    result = cv2.addWeighted(img, 0.9, drawing, 0.2, 0)
+    result = cv2.addWeighted(img, 0.9, drawing, 0.1, 0)
+
     return result
 
 # 视频处理
@@ -166,7 +168,8 @@ def process_an_image(img):
 if __name__ == "__main__":
     img = cv2.imread('car_road.PNG')
     result = process_an_image(img)
-    cv2.imshow("car_road", np.hstack((img, result)))
+    # cv2.imshow("car_road", np.hstack((img, result)))
+    cv2.imshow("car_road", result)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
